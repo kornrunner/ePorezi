@@ -73,13 +73,13 @@ public abstract class PKCS11Card extends SmartCard {
             throw new KeyStoreException(var4);
          } else {
             var4 = this.getPKCS11ModuleName(var2);
-            String var5 = "name=" + var4 + "\nlibrary=" + var3;
+            String var5 = "--\nname=" + var4 + "\nlibrary=" + var3;
             Utils.logMessage("Loading PKCS11 module: " + var5);
-            byte[] var6 = var5.getBytes();
-            ByteArrayInputStream var7 = new ByteArrayInputStream(var6);
-            Security.addProvider(Security.getProvider("SunPKCS11"));
+            Provider tmpProvider = Security.getProvider("SunPKCS11");
+            Provider provider = tmpProvider.configure(var5);
+            Security.addProvider(provider);
             CallbackHandlerProtection var9 = new CallbackHandlerProtection(new PKCS11Card.PinCallbackHandler(null));
-            Builder var10 = Builder.newInstance("PKCS11", (Provider)null, var9);
+            Builder var10 = Builder.newInstance("PKCS11", provider, var9);
             KeyStore var11 = var10.getKeyStore();
             SmartCardLogic._fixAliases(var11);
             return var11;

@@ -226,7 +226,7 @@ public class SigningLogic {
          x509.add(firstInChain);
          X509IssuerSerial x509IssuerSerial = kif.newX509IssuerSerial(firstInChain.getIssuerDN().getName(), firstInChain.getSerialNumber());
          x509.add(x509IssuerSerial);
-         x509.add(firstInChain.getSubjectX500Principal().getName());
+         x509.add(firstInChain.getSubjectX500Principal().toString());
          X509Data x509Data = kif.newX509Data(x509);
          kif.newKeyValue(kp.getPublic());
          ArrayList items = new ArrayList();
@@ -276,22 +276,24 @@ public class SigningLogic {
             Certificate[] chain = this.getCard().getKeyStore().getCertificateChain(alias);
             if(chain.length > 0) {
                X509Certificate firstInChain = (X509Certificate)chain[0];
-               String dn = firstInChain.getSubjectX500Principal().getName();
+               String dn = firstInChain.getSubjectX500Principal().toString();
 
                try {
                   LdapName ldapDN = new LdapName(dn);
-                  Iterator ex1 = ldapDN.getRdns().iterator();
+                  Iterator<Rdn> ex1 = ldapDN.getRdns().iterator();
 
                   while(ex1.hasNext()) {
                      Rdn rdn = (Rdn)ex1.next();
-                     if(rdn.getType().equals("CN")) {
-                        String cn = rdn.getValue().toString();
-                        if(cn != null) {
-                           String[] cnsplit = cn.split(" ");
-                           this.setFirstName(cnsplit[0]);
-                           if(cnsplit.length > 1) {
-                              this.setLastName(cnsplit[1]);
-                           }
+                     String rdnType = rdn.getType();
+                     if(rdnType.equals("GIVENNAME")) {
+                        String givenName = rdn.getValue().toString();
+                        if(givenName != null) {
+                           this.setFirstName(givenName);
+                        }
+                     } else if (rdnType.equals("SURNAME")) {
+                        String lastName = rdn.getValue().toString();
+                        if(lastName != null) {
+                           this.setLastName(lastName);
                         }
                      }
                   }
@@ -361,7 +363,7 @@ public class SigningLogic {
          x509.add(firstInChain);
          X509IssuerSerial x509IssuerSerial = kif.newX509IssuerSerial(firstInChain.getIssuerDN().getName(), firstInChain.getSerialNumber());
          x509.add(x509IssuerSerial);
-         x509.add(firstInChain.getSubjectX500Principal().getName());
+         x509.add(firstInChain.getSubjectX500Principal().toString());
          X509Data x509Data = kif.newX509Data(x509);
          KeyValue kv = kif.newKeyValue(kp.getPublic());
          ArrayList items = new ArrayList();

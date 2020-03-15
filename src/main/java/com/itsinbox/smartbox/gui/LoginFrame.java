@@ -400,24 +400,25 @@ public class LoginFrame extends JFrame implements ReaderListener, ActionListener
                 Certificate[] chain = this.card.getKeyStore().getCertificateChain(alias);
                 if (chain.length > 0) {
                     X509Certificate firstInChain = (X509Certificate)chain[0];
-                    String dn = firstInChain.getSubjectX500Principal().getName();
+                    String dn = firstInChain.getSubjectX500Principal().toString();
 
                     try {
                         LdapName ldapDN = new LdapName(dn);
-                        Iterator var8 = ldapDN.getRdns().iterator();
+                        Iterator<Rdn> var8 = ldapDN.getRdns().iterator();
 
                         while(var8.hasNext()) {
                             Rdn rdn = (Rdn)var8.next();
-                            if (rdn.getType().equals("CN")) {
-                                String cn = rdn.getValue().toString();
-                                this.personalId = SmartCardLogic.extractPersonalId(cn);
-                                if (cn != null) {
-                                    String[] cnsplit = cn.split(" ");
-                                    this.firstName = cnsplit[0];
-                                    if (cnsplit.length > 1) {
-                                        this.lastName = cnsplit[1];
-                                    }
+                            String rdnType = rdn.getType();
+                            if (rdnType.equals("SERIALNUMBER")) {
+                                String sn = rdn.getValue().toString();
+                                String tmpPersonalId = SmartCardLogic.extractPersonalId(sn);
+                                if (tmpPersonalId.length() > 0) {
+                                    this.personalId = tmpPersonalId;
                                 }
+                            } else if (rdnType.equals("GIVENNAME")) {
+                                this.firstName = rdn.getValue().toString();
+                            } else if (rdnType.equals("SURNAME")) {
+                                this.lastName = rdn.getValue().toString();
                             }
                         }
                     } catch (InvalidNameException var12) {

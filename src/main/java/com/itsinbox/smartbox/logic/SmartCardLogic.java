@@ -59,7 +59,7 @@ public class SmartCardLogic {
       return id;
    }
 
-   public static String findCorrectAlias(KeyStore keyStore, List aliasList) {
+   public static String findCorrectAlias(KeyStore keyStore, List<String> aliasList) {
       String ret = null;
       Iterator var3 = aliasList.iterator();
 
@@ -72,18 +72,21 @@ public class SmartCardLogic {
             Certificate[] ex = keyStore.getCertificateChain(alias);
             if(ex.length > 0) {
                X509Certificate i = (X509Certificate)ex[0];
-               String chainMember = i.getSubjectX500Principal().getName();
+               String chainMember = i.getSubjectX500Principal().toString();
                Utils.logMessage("DN: " + chainMember);
 
                try {
                   LdapName keyUsage = new LdapName(chainMember);
-                  Iterator ex1 = keyUsage.getRdns().iterator();
+                  Iterator<Rdn> ex1 = keyUsage.getRdns().iterator();
 
                   while(ex1.hasNext()) {
                      Rdn rdn = (Rdn)ex1.next();
-                     if(rdn.getType().equals("CN")) {
-                        String cn = rdn.getValue().toString();
-                        personalId = extractPersonalId(cn);
+                     if(rdn.getType().equals("SERIALNUMBER")) {
+                        String sn = rdn.getValue().toString();
+                        String tmpPersonalId = extractPersonalId(sn);
+                        if (tmpPersonalId.length() > 0) {
+                           personalId = tmpPersonalId;
+                        }
                      }
                   }
                } catch (InvalidNameException var14) {
